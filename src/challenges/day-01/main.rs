@@ -1,5 +1,6 @@
 use aoc_2025::helpers;
 use aoc_2025::helpers::Parser;
+use aoc_2025::helpers::Parsed;
 
 pub const NAME: &str = "Secret Entrance";
 
@@ -66,7 +67,7 @@ struct DialParser {
 }
 
 impl Parser<Sequence> for DialParser {
-    fn parse(&self, line: &str) -> Sequence {
+    fn parse(&self, line: &str) -> Parsed<Sequence> {
         let rollover_value = self.dial_limit + 1;
         let value = line[1..].parse::<i32>().unwrap();
         let magnitude;
@@ -78,14 +79,14 @@ impl Parser<Sequence> for DialParser {
             rollovers = 0;
             magnitude = value;
         }
-        Sequence {
-            rollovers,
-            magnitude: if line.starts_with('L') {
-                -magnitude
-            } else {
-                magnitude
-            },
-        }
+        Parsed::One(Sequence {
+          rollovers,
+          magnitude: if line.starts_with('L') {
+            -magnitude
+          } else {
+            magnitude
+          },
+        })
     }
 }
 
@@ -102,7 +103,7 @@ mod tests {
         let parser = DialParser { dial_limit: 99 };
         let input = raw_input
             .iter()
-            .map(|x| parser.parse(x))
+            .map(|x| parser.parse(x).one())
             .collect::<Vec<Sequence>>();
         let result = run_easy(&input, 50, 99);
         assert_eq!(result.dial_position, 32);
@@ -117,7 +118,7 @@ mod tests {
         let parser = DialParser { dial_limit: 99 };
         let input = raw_input
             .iter()
-            .map(|x| parser.parse(x))
+            .map(|x| parser.parse(x).one())
             .collect::<Vec<Sequence>>();
         let result = run_hard(&input, 50, 99);
         assert_eq!(result.dial_position, 32);
@@ -127,16 +128,16 @@ mod tests {
     #[test]
     fn test_parser() {
         let parser = DialParser { dial_limit: 99 };
-        let result = parser.parse("L41");
+        let result = parser.parse("L41").one();
         assert_eq!(result.magnitude, -41);
         assert_eq!(result.rollovers, 0);
-        let result = parser.parse("R12");
+        let result = parser.parse("R12").one();
         assert_eq!(result.magnitude, 12);
         assert_eq!(result.rollovers, 0);
-        let result = parser.parse("R115");
+        let result = parser.parse("R115").one();
         assert_eq!(result.magnitude, 15);
         assert_eq!(result.rollovers, 1);
-        let result = parser.parse("R200");
+        let result = parser.parse("R200").one();
         assert_eq!(result.magnitude, 0);
         assert_eq!(result.rollovers, 2);
     }
@@ -230,7 +231,7 @@ mod tests {
     #[test]
     fn test_hard_4() {
         let parser = DialParser { dial_limit: 99 };
-        let input = vec![parser.parse("R551"), parser.parse("L10")];
+        let input = vec![parser.parse("R551").one(), parser.parse("L10").one()];
         let result = run_hard(&input, 50, 99);
         assert_eq!(result.dial_position, 91);
         assert_eq!(result.zero_count, 7);
@@ -239,7 +240,7 @@ mod tests {
     #[test]
     fn test_hard_5() {
         let parser = DialParser { dial_limit: 99 };
-        let input = vec![parser.parse("L50"), parser.parse("L10")];
+        let input = vec![parser.parse("L50").one(), parser.parse("L10").one()];
         let result = run_hard(&input, 50, 99);
         assert_eq!(result.dial_position, 90);
         assert_eq!(result.zero_count, 1);
