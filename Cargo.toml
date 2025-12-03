@@ -8,4 +8,3 @@ name = "day-01"
 path = "src/challenges/day-01/main.rs"
 
 [dependencies]
-num-integer = "0.1"
