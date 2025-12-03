@@ -1,7 +1,5 @@
 use std::fs::read_to_string;
 
-pub const VERSION: &str = "0.0.1";
-
 pub trait Parser<T> {
     fn parse(&self, line: &str) -> T;
 }
