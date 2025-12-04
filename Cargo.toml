@@ -11,4 +11,8 @@ path = "src/challenges/day-01/main.rs"
 name = "day-02"
 path = "src/challenges/day-02/main.rs"
 
+[[bin]]
+name = "day-03"
+path = "src/challenges/day-03/main.rs"
+
 [dependencies]
