@@ -1,8 +1,9 @@
 use aoc_2025::helpers::{Parsed, Parser, read_file};
 
-pub const NAME: &str = "Secret Entrance";
+ pub const NAME: &str = "Day 01 - Secret Entrance";
 
 fn main() {
+    println!("{}", NAME);
     let input = read_file(
         "./src/challenges/day-01/input.txt",
         DialParser { dial_limit: 99 },

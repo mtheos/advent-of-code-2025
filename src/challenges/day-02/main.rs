@@ -1,8 +1,9 @@
 use aoc_2025::helpers::{read_file, Parsed, Parser};
 
-pub const NAME: &str = "Gift Shop";
+pub const NAME: &str = "Day 02 - Gift Shop";
 
 fn main() {
+    println!("{}", NAME);
     let input = read_file("./src/challenges/day-02/input.txt", RangeParser {});
     let result = run_easy(&input);
     println!("Count: {}", result.invalid_count);
@@ -169,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_easy_1() {
-        let input = vec![Range { start: 0, end: 15 }];
+        let input = vec![Range { start: 1, end: 15 }];
         let result = run_easy(&input);
         assert_eq!(result.invalid_count, 1);
     }
