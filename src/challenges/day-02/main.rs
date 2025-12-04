@@ -1,10 +1,9 @@
-use aoc_2025::helpers;
-use aoc_2025::helpers::{Parsed, Parser};
+use aoc_2025::helpers::{read_file, Parsed, Parser};
 
 pub const NAME: &str = "Gift Shop";
 
 fn main() {
-    let input = helpers::read_file("./src/challenges/day-02/input.txt", RangeParser {});
+    let input = read_file("./src/challenges/day-02/input.txt", RangeParser {});
     let result = run_easy(&input);
     println!("Count: {}", result.invalid_count);
     println!("Count: {}", result.invalid_sum);
@@ -18,22 +17,66 @@ fn run_easy(input: &Vec<Range>) -> Answer {
     let mut invalid_sum = 0;
     input.iter().for_each(|range| {
         for id in range.start..=range.end {
-            let id_str = id.to_string();
-            if id_str.len() % 2 != 0 {
+            let len = id.checked_ilog10().unwrap() + 1;
+            if len % 2 != 0 {
                 continue;
             }
-            let (left, right) = id_str.split_at(id_str.len() / 2);
-            if left == right {
+            let half_len = len / 2;
+            let nibble = get_n_digits(id, half_len);
+            let repeated = repeat_nibble(nibble, len);
+            if repeated == id {
                 invalid_count += 1;
                 invalid_sum += id;
             }
         }
     });
-    Answer {invalid_count, invalid_sum}
+    Answer {
+        invalid_count,
+        invalid_sum,
+    }
 }
 
 fn run_hard(input: &Vec<Range>) -> Answer {
-    todo!()
+    let mut invalid_count = 0;
+    let mut invalid_sum = 0;
+    input.iter().for_each(|range| {
+        for id in range.start..=range.end {
+            let len = id.checked_ilog10().unwrap() + 1;
+            let half_len = len / 2;
+            let mut digit_count = 1;
+            loop {
+                if digit_count > half_len {
+                    break;
+                }
+                let nibble = get_n_digits(id, digit_count);
+                let repeated = repeat_nibble(nibble, len);
+                if repeated == id {
+                    invalid_count += 1;
+                    invalid_sum += id;
+                    break;
+                }
+                digit_count += 1;
+            }
+        }
+    });
+    Answer {
+        invalid_count,
+        invalid_sum,
+    }
+}
+
+fn get_n_digits(number: u64, num_digits: u32) -> u64 {
+    let digits = number.checked_ilog10().unwrap() + 1;
+    let mag = digits - num_digits;
+    number.div_euclid(10_u64.pow(mag))
+}
+
+fn repeat_nibble(nibble: u64, total_len: u32) -> u64 {
+    let digits = nibble.checked_ilog10().unwrap() + 1;
+    let mag = 10_u64.pow(digits);
+    let count = total_len.div_euclid(digits);
+    let gp = 1 * ((mag.pow(count) - 1) / (mag - 1));
+    gp * nibble
 }
 
 struct Answer {
@@ -50,7 +93,8 @@ struct RangeParser {}
 
 impl Parser<Range> for RangeParser {
     fn parse(&self, line: &str) -> Parsed<Range> {
-       let ranges = line.split(",")
+        let ranges = line
+            .split(",")
             .map(|range| {
                 let (start, end) = range.split_once("-").unwrap();
                 let start = start.parse::<u64>().unwrap();
@@ -64,8 +108,8 @@ impl Parser<Range> for RangeParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{run_easy, run_hard, Range, RangeParser};
-    use aoc_2025::helpers::Parser;
+    use crate::{get_n_digits, Parser};
+    use crate::{repeat_nibble, run_easy, run_hard, Range, RangeParser};
 
     #[test]
     fn test_sample_input_easy() {
@@ -87,7 +131,8 @@ mod tests {
         let parser = RangeParser {};
         let input = parser.parse(raw_input).many();
         let result = run_hard(&input);
-        assert_eq!(result.invalid_count, 6);
+        assert_eq!(result.invalid_count, 13);
+        assert_eq!(result.invalid_sum, 4174379265);
     }
 
     #[test]
@@ -102,16 +147,43 @@ mod tests {
     }
 
     #[test]
+    fn test_get_n_digits() {
+        let res = get_n_digits(345678, 1);
+        assert_eq!(res, 3);
+        let res = get_n_digits(345678, 2);
+        assert_eq!(res, 34);
+        let res = get_n_digits(345678, 3);
+        assert_eq!(res, 345);
+        let res = get_n_digits(345678, 4);
+        assert_eq!(res, 3456);
+    }
+
+    #[test]
+    fn test_repeat_nibble() {
+        let res = repeat_nibble(1, 4);
+        assert_eq!(res, 1111);
+        let res = repeat_nibble(34, 4);
+        assert_eq!(res, 3434);
+        let res = repeat_nibble(345, 9);
+        assert_eq!(res, 345345345);
+        let res = repeat_nibble(3456, 8);
+        assert_eq!(res, 34563456);
+    }
+
+    #[test]
     fn test_easy_1() {
         let input = vec![Range { start: 0, end: 15 }];
         let result = run_easy(&input);
-        assert_eq!(result.invalid_count, 0);
+        assert_eq!(result.invalid_count, 1);
     }
 
     #[test]
     fn test_hard_1() {
-        let input = vec![Range { start: 0, end: 15 }];
+        let input = vec![Range {
+            start: 100,
+            end: 125,
+        }];
         let result = run_hard(&input);
-        assert_eq!(result.invalid_count, 0);
+        assert_eq!(result.invalid_count, 1);
     }
 }
