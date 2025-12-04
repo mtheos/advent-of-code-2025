@@ -17,7 +17,7 @@ fn run_easy(input: &Vec<Range>) -> Answer {
     let mut invalid_sum = 0;
     input.iter().for_each(|range| {
         for id in range.start..=range.end {
-            let len = id.checked_ilog10().unwrap() + 1;
+            let len = id.ilog10() + 1;
             if len % 2 != 0 {
                 continue;
             }
@@ -41,13 +41,10 @@ fn run_hard(input: &Vec<Range>) -> Answer {
     let mut invalid_sum = 0;
     input.iter().for_each(|range| {
         for id in range.start..=range.end {
-            let len = id.checked_ilog10().unwrap() + 1;
+            let len = id.ilog10() + 1;
             let half_len = len / 2;
             let mut digit_count = 1;
-            loop {
-                if digit_count > half_len {
-                    break;
-                }
+            while digit_count <= half_len {
                 let nibble = get_n_digits(id, digit_count);
                 let repeated = repeat_nibble(nibble, len);
                 if repeated == id {
@@ -66,13 +63,13 @@ fn run_hard(input: &Vec<Range>) -> Answer {
 }
 
 fn get_n_digits(number: u64, num_digits: u32) -> u64 {
-    let digits = number.checked_ilog10().unwrap() + 1;
+    let digits = number.ilog10() + 1;
     let mag = digits - num_digits;
     number.div_euclid(10_u64.pow(mag))
 }
 
 fn repeat_nibble(nibble: u64, total_len: u32) -> u64 {
-    let digits = nibble.checked_ilog10().unwrap() + 1;
+    let digits = nibble.ilog10() + 1;
     let mag = 10_u64.pow(digits);
     let count = total_len.div_euclid(digits);
     let gp = 1 * ((mag.pow(count) - 1) / (mag - 1));
@@ -113,11 +110,11 @@ mod tests {
 
     #[test]
     fn test_sample_input_easy() {
-        let raw_input =
+        let sample_input =
             "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,\
         446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
         let parser = RangeParser {};
-        let input = parser.parse(raw_input).many();
+        let input = parser.parse(sample_input).many();
         let result = run_easy(&input);
         assert_eq!(result.invalid_count, 8);
         assert_eq!(result.invalid_sum, 1227775554);
@@ -125,11 +122,11 @@ mod tests {
 
     #[test]
     fn test_sample_input_hard() {
-        let raw_input =
+        let sample_input =
             "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,\
         446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
         let parser = RangeParser {};
-        let input = parser.parse(raw_input).many();
+        let input = parser.parse(sample_input).many();
         let result = run_hard(&input);
         assert_eq!(result.invalid_count, 13);
         assert_eq!(result.invalid_sum, 4174379265);

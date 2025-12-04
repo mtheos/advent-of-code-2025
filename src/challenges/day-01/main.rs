@@ -95,11 +95,11 @@ mod tests {
 
     #[test]
     fn test_sample_input_easy() {
-        let raw_input = vec![
+        let sample_input = vec![
             "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82",
         ];
         let parser = DialParser { dial_limit: 99 };
-        let input = raw_input
+        let input = sample_input
             .iter()
             .map(|x| parser.parse(x).one())
             .collect::<Vec<Sequence>>();
@@ -110,11 +110,11 @@ mod tests {
 
     #[test]
     fn test_sample_input_hard() {
-        let raw_input = vec![
+        let sample_input = vec![
             "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82",
         ];
         let parser = DialParser { dial_limit: 99 };
-        let input = raw_input
+        let input = sample_input
             .iter()
             .map(|x| parser.parse(x).one())
             .collect::<Vec<Sequence>>();
