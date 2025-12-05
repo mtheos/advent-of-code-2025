@@ -19,5 +19,9 @@ path = "src/challenges/day-03/main.rs"
 name = "day-04"
 path = "src/challenges/day-04/main.rs"
 
+[[bin]]
+name = "day-05"
+path = "src/challenges/day-05/main.rs"
+
 [dependencies]
 strum_macros = "0.27.2"
