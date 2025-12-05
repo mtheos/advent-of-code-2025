@@ -1,10 +1,11 @@
 use aoc_2025::helpers::{time_it, Reader};
 
 pub const NAME: &str = "Day 02 - Gift Shop";
+pub const PREFIX: &str = "./src/challenges/day-02";
 
 fn main() {
     println!("{}", NAME);
-    let reader = Reader::from_file("./src/challenges/day-02/input.txt");
+    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
     let input = RangeParser {}.parse(reader);
     let (result, duration) = time_it(|| run_easy(&input));
     println!("Easy: {duration:?}");
@@ -111,17 +112,14 @@ impl RangeParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::get_n_digits;
+    use crate::{get_n_digits, PREFIX};
     use crate::{repeat_nibble, run_easy, run_hard, Range, RangeParser};
     use aoc_2025::helpers::Reader;
 
     #[test]
     fn test_sample_input_easy() {
-        let sample_input =
-            "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,\
-        446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
-        let parser = RangeParser {};
-        let input = parser.parse(Reader::single(sample_input));
+        let input =
+            RangeParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_easy(&input);
         assert_eq!(result.invalid_count, 8);
         assert_eq!(result.invalid_sum, 1227775554);
@@ -129,11 +127,8 @@ mod tests {
 
     #[test]
     fn test_sample_input_hard() {
-        let sample_input =
-            "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,\
-        446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
-        let parser = RangeParser {};
-        let input = parser.parse(Reader::single(sample_input));
+        let input =
+            RangeParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_hard(&input);
         assert_eq!(result.invalid_count, 13);
         assert_eq!(result.invalid_sum, 4174379265);

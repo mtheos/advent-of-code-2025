@@ -1,10 +1,11 @@
 use aoc_2025::helpers::{time_it, Reader};
 
 pub const NAME: &str = "Day 01 - Secret Entrance";
+pub const PREFIX: &str = "./src/challenges/day-01";
 
 fn main() {
     println!("{}", NAME);
-    let reader = Reader::from_file("./src/challenges/day-01/input.txt");
+    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
     let input = DialParser { dial_limit: 99 }.parse(reader);
     let (result, duration) = time_it(|| run_easy(&input, 50, 99));
     println!("Easy: {duration:?}");
@@ -95,15 +96,14 @@ impl DialParser {
 
 #[cfg(test)]
 mod tests {
+    use crate::PREFIX;
     use crate::{run_easy, run_hard, DialParser, Sequence};
     use aoc_2025::helpers::Reader;
 
     #[test]
     fn test_sample_input_easy() {
-        let sample_input = vec![
-            "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82",
-        ];
-        let input = DialParser { dial_limit: 99 }.parse(Reader::from_vec(sample_input));
+        let input = DialParser { dial_limit: 99 }
+            .parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_easy(&input, 50, 99);
         assert_eq!(result.dial_position, 32);
         assert_eq!(result.zero_count, 3);
@@ -111,10 +111,8 @@ mod tests {
 
     #[test]
     fn test_sample_input_hard() {
-        let sample_input = vec![
-            "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82",
-        ];
-        let input = DialParser { dial_limit: 99 }.parse(Reader::from_vec(sample_input));
+        let input = DialParser { dial_limit: 99 }
+            .parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_hard(&input, 50, 99);
         assert_eq!(result.dial_position, 32);
         assert_eq!(result.zero_count, 6);

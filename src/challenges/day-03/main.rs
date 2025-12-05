@@ -2,10 +2,11 @@ use aoc_2025::helpers::{time_it, Reader};
 use std::ops::{Index, Range};
 
 pub const NAME: &str = "Day 03 - Lobby";
+pub const PREFIX: &str = "./src/challenges/day-03";
 
 fn main() {
     println!("{}", NAME);
-    let reader = Reader::from_file("./src/challenges/day-03/input.txt");
+    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
     let input = BatteryBankParser {}.parse(reader);
     let (result, duration) = time_it(|| run_easy(&input));
     println!("Easy: {duration:?}");
@@ -107,32 +108,22 @@ impl BatteryBankParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::find_all_the_joltage;
+    use crate::{find_all_the_joltage, PREFIX};
     use crate::{run_easy, run_hard, BatteryBank, BatteryBankParser};
     use aoc_2025::helpers::Reader;
 
     #[test]
     fn test_sample_input_easy() {
-        let sample_input = vec![
-            "987654321111111",
-            "811111111111119",
-            "234234234234278",
-            "818181911112111",
-        ];
-        let input = BatteryBankParser {}.parse(Reader::from_vec(sample_input));
+        let input =
+            BatteryBankParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_easy(&input);
         assert_eq!(result.max_joltage, 357);
     }
 
     #[test]
     fn test_sample_input_hard() {
-        let sample_input = vec![
-            "987654321111111",
-            "811111111111119",
-            "234234234234278",
-            "818181911112111",
-        ];
-        let input = BatteryBankParser {}.parse(Reader::from_vec(sample_input));
+        let input =
+            BatteryBankParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_hard(&input);
         assert_eq!(result.max_joltage, 3121910778619);
     }

@@ -3,10 +3,11 @@ use std::ops::{Index, IndexMut};
 use strum_macros::Display;
 
 pub const NAME: &str = "Day 04 - Printing Department";
+pub const PREFIX: &str = "./src/challenges/day-04";
 
 fn main() {
     println!("{}", NAME);
-    let reader = Reader::from_file("./src/challenges/day-04/input.txt");
+    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
     let input = FactoryFloorParser {}.parse(reader);
     let (result, duration) = time_it(|| run_easy(&input));
     println!("Easy: {duration:?}");
@@ -152,43 +153,22 @@ impl FactoryFloorParser {
 
 #[cfg(test)]
 mod tests {
+    use crate::PREFIX;
     use crate::{is_available, run_easy, run_hard, Contents, FactoryFloorParser};
     use aoc_2025::helpers::Reader;
 
     #[test]
     fn test_sample_input_easy() {
-        let sample_input = vec![
-            "..@@.@@@@.",
-            "@@@.@.@.@@",
-            "@@@@@.@.@@",
-            "@.@@@@..@.",
-            "@@.@@@@.@@",
-            ".@@@@@@@.@",
-            ".@.@.@.@@@",
-            "@.@@@.@@@@",
-            ".@@@@@@@@.",
-            "@.@.@@@.@.",
-        ];
-        let input = FactoryFloorParser {}.parse(Reader::from_vec(sample_input));
+        let input =
+            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_easy(&input);
         assert_eq!(result.available_rolls, 13);
     }
 
     #[test]
     fn test_sample_input_hard() {
-        let sample_input = vec![
-            "..@@.@@@@.",
-            "@@@.@.@.@@",
-            "@@@@@.@.@@",
-            "@.@@@@..@.",
-            "@@.@@@@.@@",
-            ".@@@@@@@.@",
-            ".@.@.@.@@@",
-            "@.@@@.@@@@",
-            ".@@@@@@@@.",
-            "@.@.@@@.@.",
-        ];
-        let input = FactoryFloorParser {}.parse(Reader::from_vec(sample_input));
+        let input =
+            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
         let result = run_hard(&mut input.clone());
         assert_eq!(result.available_rolls, 43);
     }
