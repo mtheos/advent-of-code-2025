@@ -12,7 +12,7 @@ fn main() {
     let (result, duration) = time_it(|| run_easy(&input));
     println!("Easy: {duration:?}");
     println!("Available: {}", result.available_rolls);
-    let (result, duration) = time_it(|| run_hard(&mut input.clone()));
+    let (result, duration) = time_it(|| run_hard(&input));
     println!("Hard: {duration:?}");
     println!("Available: {}", result.available_rolls);
 }
@@ -29,7 +29,8 @@ fn run_easy(input: &FactoryFloor) -> Answer {
     Answer { available_rolls }
 }
 
-fn run_hard(input: &mut FactoryFloor) -> Answer {
+fn run_hard(input: &FactoryFloor) -> Answer {
+    let input = &mut input.clone();
     let mut available_rolls = 0;
     let mut to_remove: Vec<(usize, usize)> = Vec::new();
     loop {
@@ -169,7 +170,7 @@ mod tests {
     fn test_sample_input_hard() {
         let input =
             FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_hard(&mut input.clone());
+        let result = run_hard(&input);
         assert_eq!(result.available_rolls, 43);
     }
 
