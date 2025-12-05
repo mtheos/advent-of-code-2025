@@ -1,10 +1,11 @@
-use aoc_2025::helpers::{read_file, Parsed, Parser};
+use aoc_2025::helpers::Reader;
 
 pub const NAME: &str = "Day 02 - Gift Shop";
 
 fn main() {
     println!("{}", NAME);
-    let input = read_file("./src/challenges/day-02/input.txt", RangeParser {});
+    let reader = Reader::from_file("./src/challenges/day-02/input.txt");
+    let input = RangeParser {}.parse(reader);
     let result = run_easy(&input);
     println!("Count: {}", result.invalid_count);
     println!("Count: {}", result.invalid_sum);
@@ -89,25 +90,34 @@ struct Range {
 
 struct RangeParser {}
 
-impl Parser<Range> for RangeParser {
-    fn parse(&self, line: &str) -> Parsed<Range> {
-        let ranges = line
-            .split(",")
-            .map(|range| {
-                let (start, end) = range.split_once("-").unwrap();
-                let start = start.parse::<u64>().unwrap();
-                let end = end.parse::<u64>().unwrap();
-                Range { start, end }
-            })
-            .collect::<Vec<Range>>();
-        Parsed::Many(ranges)
+impl RangeParser {
+    fn parse(&self, reader: Reader) -> Vec<Range> {
+        let mut result = Vec::new();
+        loop {
+            match reader.next() {
+                None => return result,
+                Some(line) => {
+                    let ranges = line
+                        .split(",")
+                        .map(|range| {
+                            let (start, end) = range.split_once("-").unwrap();
+                            let start = start.parse::<u64>().unwrap();
+                            let end = end.parse::<u64>().unwrap();
+                            Range { start, end }
+                        })
+                        .collect::<Vec<Range>>();
+                    result.extend(ranges)
+                }
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_n_digits, Parser};
+    use crate::get_n_digits;
     use crate::{repeat_nibble, run_easy, run_hard, Range, RangeParser};
+    use aoc_2025::helpers::Reader;
 
     #[test]
     fn test_sample_input_easy() {
@@ -115,7 +125,7 @@ mod tests {
             "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,\
         446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
         let parser = RangeParser {};
-        let input = parser.parse(sample_input).many();
+        let input = parser.parse(Reader::single(sample_input));
         let result = run_easy(&input);
         assert_eq!(result.invalid_count, 8);
         assert_eq!(result.invalid_sum, 1227775554);
@@ -127,7 +137,7 @@ mod tests {
             "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,\
         446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
         let parser = RangeParser {};
-        let input = parser.parse(sample_input).many();
+        let input = parser.parse(Reader::single(sample_input));
         let result = run_hard(&input);
         assert_eq!(result.invalid_count, 13);
         assert_eq!(result.invalid_sum, 4174379265);
@@ -136,10 +146,13 @@ mod tests {
     #[test]
     fn test_parser() {
         let parser = RangeParser {};
-        let result = parser.parse("11-22").many().pop().unwrap();
+        let result = parser.parse(Reader::single("11-22")).pop().unwrap();
         assert_eq!(result.start, 11);
         assert_eq!(result.end, 22);
-        let result = parser.parse("824824821-824824827").many().pop().unwrap();
+        let result = parser
+            .parse(Reader::single("824824821-824824827"))
+            .pop()
+            .unwrap();
         assert_eq!(result.start, 824824821);
         assert_eq!(result.end, 824824827);
     }

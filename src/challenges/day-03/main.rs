@@ -1,11 +1,12 @@
-use aoc_2025::helpers::{read_file, Parsed, Parser};
+use aoc_2025::helpers::Reader;
 use std::ops::{Index, Range};
 
 pub const NAME: &str = "Day 03 - Lobby";
 
 fn main() {
     println!("{}", NAME);
-    let input = read_file("./src/challenges/day-03/input.txt", BatteryBankParser {});
+    let reader = Reader::from_file("./src/challenges/day-03/input.txt");
+    let input = BatteryBankParser {}.parse(reader);
     let result = run_easy(&input);
     println!("Joltage: {}", result.max_joltage);
     let result = run_hard(&input);
@@ -88,20 +89,29 @@ impl Index<Range<usize>> for BatteryBank {
 
 struct BatteryBankParser {}
 
-impl Parser<BatteryBank> for BatteryBankParser {
-    fn parse(&self, line: &str) -> Parsed<BatteryBank> {
-        let batteries = line
-            .chars()
-            .map(|char| char.to_digit(10).unwrap() as u8)
-            .collect::<Vec<u8>>();
-        Parsed::One(BatteryBank { batteries })
+impl BatteryBankParser {
+    fn parse(&self, reader: Reader) -> Vec<BatteryBank> {
+        let mut result = Vec::new();
+        loop {
+            match reader.next() {
+                None => return result,
+                Some(line) => {
+                    let batteries = line
+                        .chars()
+                        .map(|char| char.to_digit(10).unwrap() as u8)
+                        .collect::<Vec<u8>>();
+                    result.push(BatteryBank { batteries })
+                }
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{find_all_the_joltage, Parser};
+    use crate::find_all_the_joltage;
     use crate::{run_easy, run_hard, BatteryBank, BatteryBankParser};
+    use aoc_2025::helpers::Reader;
 
     #[test]
     fn test_sample_input_easy() {
@@ -111,12 +121,7 @@ mod tests {
             "234234234234278",
             "818181911112111",
         ];
-
-        let parser = BatteryBankParser {};
-        let input = sample_input
-            .iter()
-            .map(|line| parser.parse(line).one())
-            .collect();
+        let input = BatteryBankParser {}.parse(Reader::from_vec(sample_input));
         let result = run_easy(&input);
         assert_eq!(result.max_joltage, 357);
     }
@@ -129,21 +134,19 @@ mod tests {
             "234234234234278",
             "818181911112111",
         ];
-        let parser = BatteryBankParser {};
-        let input = sample_input
-            .iter()
-            .map(|line| parser.parse(line).one())
-            .collect();
+        let input = BatteryBankParser {}.parse(Reader::from_vec(sample_input));
         let result = run_hard(&input);
         assert_eq!(result.max_joltage, 3121910778619);
     }
 
     #[test]
     fn test_parser() {
-        let parser = BatteryBankParser {};
-        let result = parser.parse("12345").one();
+        let result = BatteryBankParser {}
+            .parse(Reader::single("12345"))
+            .pop()
+            .unwrap();
         for i in 0..5 {
-            assert_eq!(result.batteries[i], (i + 1) as u8);
+            assert_eq!(result[i], (i + 1) as u8);
         }
     }
 

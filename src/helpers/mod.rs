@@ -1,43 +1,39 @@
-use std::fs::read_to_string;
+use std::cell::RefCell;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
-pub trait Parser<T> {
-    fn parse(&self, line: &str) -> Parsed<T>;
+pub struct Reader {
+    iter: RefCell<Box<dyn Iterator<Item = String>>>,
 }
 
-pub enum Parsed<T> {
-    One(T),
-    Many(Vec<T>),
-}
-
-impl<T> Parsed<T> {
-    pub fn is_one(&self) -> bool {
-        matches!(self, Self::One(_))
-    }
-    pub fn one(self) -> T {
-        match self {
-            Parsed::One(res) => res,
-            Parsed::Many(_) => panic!("I feel violated"),
+impl Reader {
+    pub fn from_vec(lines: Vec<&str>) -> Self {
+        Self {
+            iter: RefCell::new(Box::new(
+                lines
+                    .into_iter()
+                    .map(|x| x.to_owned())
+                    .collect::<Vec<String>>()
+                    .into_iter(),
+            )),
         }
     }
 
-    pub fn many(self) -> Vec<T> {
-        match self {
-            Parsed::One(_) => panic!("I feel violated"),
-            Parsed::Many(res) => res,
+    pub fn single(line: &str) -> Self {
+        Self {
+            iter: RefCell::new(Box::new(vec![line.to_owned()].into_iter())),
         }
     }
-}
 
-pub fn read_file<T, P>(file_path: &str, parser: P) -> Vec<T>
-where
-    P: Parser<T>,
-{
-    let mut result = Vec::new();
-    for line in read_to_string(file_path).unwrap().lines() {
-        match parser.parse(line) {
-            Parsed::One(res) => result.push(res),
-            Parsed::Many(res) => result.extend(res),
-        }
+    pub fn from_file(path: &str) -> Self {
+        let file = File::open(path).unwrap();
+        let reader = BufReader::new(file.try_clone().unwrap());
+        let iter = reader.lines().map(|l| l.unwrap());
+        let iter = RefCell::new(Box::new(iter));
+        Self { iter }
     }
-    result
+
+    pub fn next(&self) -> Option<String> {
+        self.iter.borrow_mut().next()
+    }
 }
