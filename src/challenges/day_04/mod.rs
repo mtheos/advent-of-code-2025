@@ -1,27 +1,47 @@
-use aoc_2025::helpers::{time_it, Reader};
+use crate::challenges::Challenge;
+use crate::helpers::{Reader, PREFIX};
 use std::ops::{Index, IndexMut};
 use strum_macros::Display;
 
-pub const NAME: &str = "Day 04 - Printing Department";
-pub const PREFIX: &str = "./src/challenges/day-04";
+const NAME: &str = "Printing Department";
+const DAY: &str = "04";
 
-fn main() {
-    println!("{}", NAME);
-    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
-    let input = FactoryFloorParser {}.parse(reader);
-    let (result, duration) = time_it(|| run_easy(&input));
-    println!("Easy: {duration:?}");
-    println!("Available: {}", result.available_rolls);
-    let (result, duration) = time_it(|| run_hard(&input));
-    println!("Hard: {duration:?}");
-    println!("Available: {}", result.available_rolls);
+pub struct State {
+    input: FactoryFloor,
 }
 
-fn run_easy(input: &FactoryFloor) -> Answer {
+impl State {
+    pub fn new() -> Self
+    where
+        Self: Sized,
+    {
+        let reader = Reader::from_file(format!("{PREFIX}_{DAY}/input.txt").as_str());
+        let input = FactoryFloorParser {}.parse(reader);
+        State { input }
+    }
+}
+
+impl Challenge for State {
+    fn preamble(&self) -> String {
+        format!("Day {DAY} - {NAME}")
+    }
+
+    fn run_easy(&mut self) -> String {
+        let Answer { available_rolls } = do_easy(&self);
+        format!("Available: {available_rolls}")
+    }
+
+    fn run_hard(&mut self) -> String {
+        let Answer { available_rolls } = do_hard(&self);
+        format!("Available: {available_rolls}")
+    }
+}
+
+fn do_easy(state: &State) -> Answer {
     let mut available_rolls = 0;
-    for r in 0..input.rows {
-        for c in 0..input.cols {
-            if input[(r, c)] == Contents::Roll && is_available((r, c), input) {
+    for r in 0..state.input.rows {
+        for c in 0..state.input.cols {
+            if state.input[(r, c)] == Contents::Roll && is_available((r, c), &state.input) {
                 available_rolls += 1;
             }
         }
@@ -29,8 +49,8 @@ fn run_easy(input: &FactoryFloor) -> Answer {
     Answer { available_rolls }
 }
 
-fn run_hard(input: &FactoryFloor) -> Answer {
-    let input = &mut input.clone();
+fn do_hard(state: &State) -> Answer {
+    let input = &mut state.input.clone();
     let mut available_rolls = 0;
     let mut to_remove: Vec<(usize, usize)> = Vec::new();
     loop {
@@ -154,23 +174,26 @@ impl FactoryFloorParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::PREFIX;
-    use crate::{is_available, run_easy, run_hard, Contents, FactoryFloorParser};
-    use aoc_2025::helpers::Reader;
+    use crate::challenges::day_04::{
+        do_easy, do_hard, is_available, Contents, FactoryFloorParser, State, DAY,
+    };
+    use crate::helpers::{Reader, PREFIX};
 
     #[test]
     fn test_sample_input_easy() {
         let input =
-            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_easy(&input);
+            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}_{DAY}/sample.txt").as_str()));
+        let state = State { input };
+        let result = do_easy(&state);
         assert_eq!(result.available_rolls, 13);
     }
 
     #[test]
     fn test_sample_input_hard() {
         let input =
-            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_hard(&input);
+            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}_{DAY}/sample.txt").as_str()));
+        let state = State { input };
+        let result = do_hard(&state);
         assert_eq!(result.available_rolls, 43);
     }
 

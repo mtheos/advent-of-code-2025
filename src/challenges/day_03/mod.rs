@@ -1,34 +1,45 @@
-use aoc_2025::helpers::{time_it, Reader};
+use crate::challenges::Challenge;
+use crate::helpers::{Reader, PREFIX};
 use std::ops::{Index, Range};
 
-pub const NAME: &str = "Day 03 - Lobby";
-pub const PREFIX: &str = "./src/challenges/day-03";
+const NAME: &str = "Lobby";
+const DAY: &str = "03";
 
-fn main() {
-    println!("{}", NAME);
-    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
-    let input = BatteryBankParser {}.parse(reader);
-    let (result, duration) = time_it(|| run_easy(&input));
-    println!("Easy: {duration:?}");
-    println!("Joltage: {}", result.max_joltage);
-    let (result, duration) = time_it(|| run_hard(&input));
-    println!("Hard: {duration:?}");
-    println!("Joltage: {}", result.max_joltage);
+pub struct State {
+    input: Vec<BatteryBank>,
 }
 
-fn run_easy(input: &Vec<BatteryBank>) -> Answer {
-    let mut max_joltage = 0;
-    input.iter().for_each(|battery_bank| {
-        let max = find_all_the_joltage(battery_bank, 2);
-        max_joltage += max;
-    });
-    Answer { max_joltage }
+impl State {
+    pub fn new() -> Self
+    where
+        Self: Sized,
+    {
+        let reader = Reader::from_file(format!("{PREFIX}_{DAY}/input.txt").as_str());
+        let input = BatteryBankParser {}.parse(reader);
+        State { input }
+    }
 }
 
-fn run_hard(input: &Vec<BatteryBank>) -> Answer {
+impl Challenge for State {
+    fn preamble(&self) -> String {
+        format!("Day {DAY} - {NAME}")
+    }
+
+    fn run_easy(&mut self) -> String {
+        let Answer { max_joltage } = sum_joltage(&self, 2);
+        format!("Max Joltage: {max_joltage}")
+    }
+
+    fn run_hard(&mut self) -> String {
+        let Answer { max_joltage } = sum_joltage(&self, 12);
+        format!("Max Joltage: {max_joltage}")
+    }
+}
+
+fn sum_joltage(state: &State, batteries_per_bank: u8) -> Answer {
     let mut max_joltage = 0;
-    input.iter().for_each(|battery_bank| {
-        let max = find_all_the_joltage(battery_bank, 12);
+    state.input.iter().for_each(|battery_bank| {
+        let max = find_all_the_joltage(battery_bank, batteries_per_bank);
         max_joltage += max;
     });
     Answer { max_joltage }
@@ -108,23 +119,26 @@ impl BatteryBankParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{find_all_the_joltage, PREFIX};
-    use crate::{run_easy, run_hard, BatteryBank, BatteryBankParser};
-    use aoc_2025::helpers::Reader;
+    use crate::challenges::day_03::{
+        find_all_the_joltage, sum_joltage, BatteryBank, BatteryBankParser, State, DAY,
+    };
+    use crate::helpers::{Reader, PREFIX};
 
     #[test]
     fn test_sample_input_easy() {
         let input =
-            BatteryBankParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_easy(&input);
+            BatteryBankParser {}.parse(Reader::from_file(format!("{PREFIX}_{DAY}/sample.txt").as_str()));
+        let state = State { input };
+        let result = sum_joltage(&state, 2);
         assert_eq!(result.max_joltage, 357);
     }
 
     #[test]
     fn test_sample_input_hard() {
         let input =
-            BatteryBankParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_hard(&input);
+            BatteryBankParser {}.parse(Reader::from_file(format!("{PREFIX}_{DAY}/sample.txt").as_str()));
+        let state = State { input };
+        let result = sum_joltage(&state, 12);
         assert_eq!(result.max_joltage, 3121910778619);
     }
 
@@ -153,7 +167,8 @@ mod tests {
         let input = vec![BatteryBank {
             batteries: vec![1, 3, 5, 4, 2],
         }];
-        let result = run_easy(&input);
+        let state = State { input };
+        let result = sum_joltage(&state, 2);
         assert_eq!(result.max_joltage, 54);
     }
 
@@ -162,7 +177,8 @@ mod tests {
         let input = vec![BatteryBank {
             batteries: vec![2, 1, 3, 5, 4, 2, 2, 3, 4, 5, 6, 7, 8],
         }];
-        let result = run_hard(&input);
+        let state = State { input };
+        let result = sum_joltage(&state, 12);
         assert_eq!(result.max_joltage, 235422345678);
     }
 }

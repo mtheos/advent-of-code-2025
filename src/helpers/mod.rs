@@ -3,29 +3,13 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::{Duration, Instant};
 
+pub const PREFIX: &str = "./src/challenges/day";
+
 pub struct Reader {
     iter: RefCell<Box<dyn Iterator<Item = String>>>,
 }
 
 impl Reader {
-    pub fn from_vec(lines: Vec<&str>) -> Self {
-        Self {
-            iter: RefCell::new(Box::new(
-                lines
-                    .into_iter()
-                    .map(|x| x.to_owned())
-                    .collect::<Vec<String>>()
-                    .into_iter(),
-            )),
-        }
-    }
-
-    pub fn single(line: &str) -> Self {
-        Self {
-            iter: RefCell::new(Box::new(vec![line.to_owned()].into_iter())),
-        }
-    }
-
     pub fn from_file(path: &str) -> Self {
         let file = File::open(path).unwrap();
         let reader = BufReader::new(file.try_clone().unwrap());
@@ -51,4 +35,30 @@ where
     let result = f();
     let duration = start.elapsed();
     (result, duration)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::helpers::Reader;
+    use std::cell::RefCell;
+
+    impl Reader {
+        pub fn from_vec(lines: Vec<&str>) -> Self {
+            Self {
+                iter: RefCell::new(Box::new(
+                    lines
+                        .into_iter()
+                        .map(|x| x.to_owned())
+                        .collect::<Vec<String>>()
+                        .into_iter(),
+                )),
+            }
+        }
+
+        pub fn single(line: &str) -> Self {
+            Self {
+                iter: RefCell::new(Box::new(vec![line.to_owned()].into_iter())),
+            }
+        }
+    }
 }

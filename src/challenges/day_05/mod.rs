@@ -1,38 +1,52 @@
-use aoc_2025::helpers::{time_it, Reader};
+use crate::challenges::Challenge;
+use crate::helpers::{Reader, PREFIX};
 use std::cmp::{max, min};
 
-pub const NAME: &str = "Day 05 - Cafeteria";
-pub const PREFIX: &str = "./src/challenges/day-05";
+const NAME: &str = "Cafeteria";
+const DAY: &str = "05";
 
-fn main() {
-    let (_, duration) = time_it(||do_it());
-    println!("total: {duration:?}");
+pub struct State {
+    ranges: Vec<Range>,
+    items: Vec<u64>,
 }
 
-fn do_it() {
-println!("{}", NAME);
-    let mut reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
-    let range_parser = RangeParser {};
-    let item_parser = ItemParser {};
-    let input = CombiParser {
-        range_parser,
-        item_parser,
+impl State {
+    pub fn new() -> Self
+    where
+        Self: Sized,
+    {
+        let mut reader = Reader::from_file(format!("{PREFIX}_{DAY}/input.txt").as_str());
+        let range_parser = RangeParser {};
+        let item_parser = ItemParser {};
+        let Database {ranges, items} = CombiParser {
+            range_parser,
+            item_parser,
+        }
+            .parse(&mut reader);
+        State { ranges, items }
     }
-    .parse(&mut reader);
-    let (result, duration) = time_it(|| run_easy(&input));
-    println!("Easy: {duration:?}");
-    println!("Unspoiled: {}", result.unspoiled_food);
-    println!("Total: {}", result.total_unspoiled_foods);
-    let (result, duration) = time_it(|| run_hard(&input));
-    println!("Hard: {duration:?}");
-    println!("Unspoiled: {}", result.unspoiled_food);
-    println!("Total: {}", result.total_unspoiled_foods);
 }
 
-fn run_easy(database: &Database) -> Answer {
+impl Challenge for State {
+    fn preamble(&self) -> String {
+        format!("Day {DAY} - {NAME}")
+    }
+
+    fn run_easy(&mut self) -> String {
+        let Answer { unspoiled_food, .. } = do_easy(&self);
+        format!("Unspoiled: {unspoiled_food}")
+    }
+
+    fn run_hard(&mut self) -> String {
+        let Answer { total_unspoiled_foods, .. } = do_hard(&self);
+        format!("Total Unspoiled: {total_unspoiled_foods}")
+    }
+}
+
+fn do_easy(state: &State) -> Answer {
     let mut unspoiled_food = 0;
-    for item in &database.items {
-        for range in &database.ranges {
+    for item in &state.items {
+        for range in &state.ranges {
             if range.start <= *item && range.end >= *item {
                 unspoiled_food += 1;
                 break;
@@ -45,9 +59,9 @@ fn run_easy(database: &Database) -> Answer {
     }
 }
 
-fn run_hard(database: &Database) -> Answer {
+fn do_hard(state: &State) -> Answer {
     let mut total_unspoiled_foods = 0;
-    for range in &database.ranges {
+    for range in &state.ranges {
         total_unspoiled_foods += range.end - range.start + 1;
     }
     Answer {
@@ -173,9 +187,8 @@ impl CombiParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{run_easy, run_hard, CombiParser, Range, PREFIX};
-    use crate::{ItemParser, RangeParser};
-    use aoc_2025::helpers::Reader;
+    use crate::challenges::day_05::{do_easy, do_hard, CombiParser, ItemParser, Range, RangeParser, State, DAY};
+    use crate::helpers::{Reader, PREFIX};
 
     #[test]
     fn test_sample_input_easy() {
@@ -186,9 +199,10 @@ mod tests {
             item_parser,
         }
         .parse(&mut Reader::from_file(
-            format!("{PREFIX}/sample.txt").as_str(),
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
         ));
-        let result = run_easy(&input);
+        let state = State { ranges: input.ranges, items: input.items };
+        let result = do_easy(&state);
         assert_eq!(result.unspoiled_food, 3);
     }
 
@@ -201,9 +215,10 @@ mod tests {
             item_parser,
         }
         .parse(&mut Reader::from_file(
-            format!("{PREFIX}/sample.txt").as_str(),
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
         ));
-        let result = run_hard(&input);
+        let state = State { ranges: input.ranges, items: input.items };
+        let result = do_hard(&state);
         assert_eq!(result.total_unspoiled_foods, 14);
     }
 

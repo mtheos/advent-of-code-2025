@@ -1,26 +1,47 @@
-use aoc_2025::helpers::{time_it, Reader};
+use crate::challenges::Challenge;
+use crate::helpers::{Reader, PREFIX};
 
-pub const NAME: &str = "Day 02 - Gift Shop";
-pub const PREFIX: &str = "./src/challenges/day-02";
+const NAME: &str = "Gift Shop";
+const DAY: &str = "02";
 
-fn main() {
-    println!("{}", NAME);
-    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
-    let input = RangeParser {}.parse(reader);
-    let (result, duration) = time_it(|| run_easy(&input));
-    println!("Easy: {duration:?}");
-    println!("Count: {}", result.invalid_count);
-    println!("Count: {}", result.invalid_sum);
-    let (result, duration) = time_it(|| run_hard(&input));
-    println!("Hard: {duration:?}");
-    println!("Count: {}", result.invalid_count);
-    println!("Count: {}", result.invalid_sum);
+pub struct State {
+    input: Vec<Range>,
 }
 
-fn run_easy(input: &Vec<Range>) -> Answer {
-    let mut invalid_count = 0;
+impl State {
+    pub fn new() -> Self
+    where
+        Self: Sized,
+    {
+        let reader = Reader::from_file(format!("{PREFIX}_{DAY}/input.txt").as_str());
+        let input = RangeParser {}.parse(reader);
+        State { input }
+    }
+}
+
+impl Challenge for State {
+    fn preamble(&self) -> String {
+        format!("Day {DAY} - {NAME}")
+    }
+
+    fn run_easy(&mut self) -> String {
+        let Answer {
+            invalid_sum,
+        } = do_easy(self);
+        format!("Invalid Sum: {invalid_sum}")
+    }
+
+    fn run_hard(&mut self) -> String {
+        let Answer {
+            invalid_sum,
+        } = do_hard(self);
+        format!("Invalid Sum: {invalid_sum}")
+    }
+}
+
+fn do_easy(state: &State) -> Answer {
     let mut invalid_sum = 0;
-    input.iter().for_each(|range| {
+    state.input.iter().for_each(|range| {
         for id in range.start..=range.end {
             let len = id.ilog10() + 1;
             if len % 2 != 0 {
@@ -30,21 +51,18 @@ fn run_easy(input: &Vec<Range>) -> Answer {
             let nibble = get_n_digits(id, half_len);
             let repeated = repeat_nibble(nibble, len);
             if repeated == id {
-                invalid_count += 1;
                 invalid_sum += id;
             }
         }
     });
     Answer {
-        invalid_count,
         invalid_sum,
     }
 }
 
-fn run_hard(input: &Vec<Range>) -> Answer {
-    let mut invalid_count = 0;
+fn do_hard(state: &State) -> Answer {
     let mut invalid_sum = 0;
-    input.iter().for_each(|range| {
+    state.input.iter().for_each(|range| {
         for id in range.start..=range.end {
             let len = id.ilog10() + 1;
             let half_len = len / 2;
@@ -53,7 +71,6 @@ fn run_hard(input: &Vec<Range>) -> Answer {
                 let nibble = get_n_digits(id, digit_count);
                 let repeated = repeat_nibble(nibble, len);
                 if repeated == id {
-                    invalid_count += 1;
                     invalid_sum += id;
                     break;
                 }
@@ -62,7 +79,6 @@ fn run_hard(input: &Vec<Range>) -> Answer {
         }
     });
     Answer {
-        invalid_count,
         invalid_sum,
     }
 }
@@ -82,7 +98,6 @@ fn repeat_nibble(nibble: u64, total_len: u32) -> u64 {
 }
 
 struct Answer {
-    invalid_count: u32,
     invalid_sum: u64,
 }
 
@@ -112,25 +127,28 @@ impl RangeParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_n_digits, PREFIX};
-    use crate::{repeat_nibble, run_easy, run_hard, Range, RangeParser};
-    use aoc_2025::helpers::Reader;
+    use crate::challenges::day_02::{
+        do_easy, do_hard, get_n_digits, repeat_nibble, Range, RangeParser, State, DAY,
+    };
+    use crate::helpers::{Reader, PREFIX};
 
     #[test]
     fn test_sample_input_easy() {
-        let input =
-            RangeParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_easy(&input);
-        assert_eq!(result.invalid_count, 8);
+        let input = RangeParser {}.parse(Reader::from_file(
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
+        ));
+        let state = State { input };
+        let result = do_easy(&state);
         assert_eq!(result.invalid_sum, 1227775554);
     }
 
     #[test]
     fn test_sample_input_hard() {
-        let input =
-            RangeParser {}.parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_hard(&input);
-        assert_eq!(result.invalid_count, 13);
+        let input = RangeParser {}.parse(Reader::from_file(
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
+        ));
+        let state = State { input };
+        let result = do_hard(&state);
         assert_eq!(result.invalid_sum, 4174379265);
     }
 
@@ -175,8 +193,9 @@ mod tests {
     #[test]
     fn test_easy_1() {
         let input = vec![Range { start: 1, end: 15 }];
-        let result = run_easy(&input);
-        assert_eq!(result.invalid_count, 1);
+        let state = State { input };
+        let result = do_easy(&state);
+        assert_eq!(result.invalid_sum, 11);
     }
 
     #[test]
@@ -185,7 +204,8 @@ mod tests {
             start: 100,
             end: 125,
         }];
-        let result = run_hard(&input);
-        assert_eq!(result.invalid_count, 1);
+        let state = State { input };
+        let result = do_hard(&state);
+        assert_eq!(result.invalid_sum, 111);
     }
 }

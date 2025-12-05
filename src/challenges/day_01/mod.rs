@@ -1,26 +1,50 @@
-use aoc_2025::helpers::{time_it, Reader};
+use crate::helpers::{Reader, PREFIX};
+use crate::Challenge;
 
-pub const NAME: &str = "Day 01 - Secret Entrance";
-pub const PREFIX: &str = "./src/challenges/day-01";
+const NAME: &str = "Secret Entrance";
+const DAY: &str = "01";
 
-fn main() {
-    println!("{}", NAME);
-    let reader = Reader::from_file(format!("{PREFIX}/input.txt").as_str());
-    let input = DialParser { dial_limit: 99 }.parse(reader);
-    let (result, duration) = time_it(|| run_easy(&input, 50, 99));
-    println!("Easy: {duration:?}");
-    println!("Pos  : {}", result.dial_position);
-    println!("Count: {}", result.zero_count);
-    let (result, duration) = time_it(|| run_hard(&input, 50, 99));
-    println!("Hard: {duration:?}");
-    println!("Pos  : {}", result.dial_position);
-    println!("Count: {}", result.zero_count);
+pub struct State {
+    input: Vec<Sequence>,
+    dial_limit: i32,
+    dial_position: i32,
 }
 
-fn run_easy(input: &Vec<Sequence>, mut dial_position: i32, dial_limit: i32) -> Answer {
+impl State {
+    pub fn new() -> Self
+    where
+        Self: Sized,
+    {
+        let reader = Reader::from_file(format!("{PREFIX}_{DAY}/input.txt").as_str());
+        let input = DialParser { dial_limit: 99 }.parse(reader);
+        State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        }
+    }
+}
+
+impl Challenge for State {
+    fn preamble(&self) -> String {
+        format!("Day {DAY} - {NAME}")
+    }
+    fn run_easy(&mut self) -> String {
+        let Answer { zero_count, .. } = do_easy(self);
+        format!("Zeros: {zero_count}")
+    }
+
+    fn run_hard(&mut self) -> String {
+        let Answer { zero_count, .. } = do_hard(self);
+        format!("Zeros: {zero_count}")
+    }
+}
+
+fn do_easy(state: &State) -> Answer {
     let mut zero_count = 0;
-    let dial_limit = dial_limit + 1;
-    input.iter().for_each(|sequence| {
+    let dial_limit = state.dial_limit + 1;
+    let mut dial_position = state.dial_position;
+    state.input.iter().for_each(|sequence| {
         dial_position += sequence.magnitude;
         dial_position = dial_position.rem_euclid(dial_limit);
         if dial_position == 0 {
@@ -28,15 +52,15 @@ fn run_easy(input: &Vec<Sequence>, mut dial_position: i32, dial_limit: i32) -> A
         }
     });
     Answer {
-        dial_position,
         zero_count,
     }
 }
 
-fn run_hard(input: &Vec<Sequence>, mut dial_position: i32, dial_limit: i32) -> Answer {
+fn do_hard(state: &State) -> Answer {
     let mut zero_count = 0;
-    let dial_limit = dial_limit + 1;
-    input.iter().for_each(|sequence| {
+    let dial_limit = state.dial_limit + 1;
+    let mut dial_position = state.dial_position;
+    state.input.iter().for_each(|sequence| {
         zero_count += sequence.rollovers;
         let dial_was_zero = dial_position == 0;
         dial_position += sequence.magnitude;
@@ -47,13 +71,11 @@ fn run_hard(input: &Vec<Sequence>, mut dial_position: i32, dial_limit: i32) -> A
         }
     });
     Answer {
-        dial_position,
         zero_count,
     }
 }
 
 struct Answer {
-    dial_position: i32,
     zero_count: i32,
 }
 
@@ -96,25 +118,34 @@ impl DialParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::PREFIX;
-    use crate::{run_easy, run_hard, DialParser, Sequence};
-    use aoc_2025::helpers::Reader;
+    use crate::challenges::day_01::{do_easy, do_hard, DialParser, Sequence, State, DAY};
+    use crate::helpers::{PREFIX, Reader};
 
     #[test]
     fn test_sample_input_easy() {
-        let input = DialParser { dial_limit: 99 }
-            .parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_easy(&input, 50, 99);
-        assert_eq!(result.dial_position, 32);
+        let input = DialParser { dial_limit: 99 }.parse(Reader::from_file(
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
+        ));
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_easy(&mut state);
         assert_eq!(result.zero_count, 3);
     }
 
     #[test]
     fn test_sample_input_hard() {
-        let input = DialParser { dial_limit: 99 }
-            .parse(Reader::from_file(format!("{PREFIX}/sample.txt").as_str()));
-        let result = run_hard(&input, 50, 99);
-        assert_eq!(result.dial_position, 32);
+        let input = DialParser { dial_limit: 99 }.parse(Reader::from_file(
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
+        ));
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_hard(&mut state);
         assert_eq!(result.zero_count, 6);
     }
 
@@ -141,8 +172,12 @@ mod tests {
             rollovers: 0,
             magnitude: 15,
         }];
-        let result = run_easy(&input, 50, 99);
-        assert_eq!(result.dial_position, 65);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_easy(&mut state);
         assert_eq!(result.zero_count, 0);
     }
 
@@ -162,8 +197,12 @@ mod tests {
                 magnitude: 40,
             },
         ];
-        let result = run_easy(&input, 50, 99);
-        assert_eq!(result.dial_position, 40);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_easy(&mut state);
         assert_eq!(result.zero_count, 1);
     }
 
@@ -173,8 +212,12 @@ mod tests {
             rollovers: 0,
             magnitude: -60,
         }];
-        let result = run_easy(&input, 50, 99);
-        assert_eq!(result.dial_position, 90);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_easy(&mut state);
         assert_eq!(result.zero_count, 0);
     }
 
@@ -184,8 +227,12 @@ mod tests {
             rollovers: 0,
             magnitude: 15,
         }];
-        let result = run_hard(&input, 50, 99);
-        assert_eq!(result.dial_position, 65);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_hard(&mut state);
         assert_eq!(result.zero_count, 0);
     }
 
@@ -205,8 +252,12 @@ mod tests {
                 magnitude: 45,
             },
         ];
-        let result = run_hard(&input, 50, 99);
-        assert_eq!(result.dial_position, 40);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_hard(&mut state);
         assert_eq!(result.zero_count, 1);
     }
 
@@ -216,24 +267,36 @@ mod tests {
             rollovers: 0,
             magnitude: -60,
         }];
-        let result = run_hard(&input, 50, 99);
-        assert_eq!(result.dial_position, 90);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_hard(&mut state);
         assert_eq!(result.zero_count, 1);
     }
 
     #[test]
     fn test_hard_4() {
         let input = DialParser { dial_limit: 99 }.parse(Reader::from_vec(vec!["R551", "L10"]));
-        let result = run_hard(&input, 50, 99);
-        assert_eq!(result.dial_position, 91);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_hard(&mut state);
         assert_eq!(result.zero_count, 7);
     }
 
     #[test]
     fn test_hard_5() {
         let input = DialParser { dial_limit: 99 }.parse(Reader::from_vec(vec!["L50", "L10"]));
-        let result = run_hard(&input, 50, 99);
-        assert_eq!(result.dial_position, 90);
+        let mut state = State {
+            input,
+            dial_limit: 99,
+            dial_position: 50,
+        };
+        let result = do_hard(&mut state);
         assert_eq!(result.zero_count, 1);
     }
 }
