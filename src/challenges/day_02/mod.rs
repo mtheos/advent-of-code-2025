@@ -49,7 +49,7 @@ fn do_easy(state: &State) -> Answer {
             }
             let half_len = len / 2;
             let nibble = get_n_digits(id, half_len);
-            let repeated = repeat_nibble(nibble, len);
+            let repeated = repeat_nibble(nibble, half_len, len);
             if repeated == id {
                 invalid_sum += id;
             }
@@ -69,7 +69,7 @@ fn do_hard(state: &State) -> Answer {
             let mut digit_count = 1;
             while digit_count <= half_len {
                 let nibble = get_n_digits(id, digit_count);
-                let repeated = repeat_nibble(nibble, len);
+                let repeated = repeat_nibble(nibble, digit_count, len);
                 if repeated == id {
                     invalid_sum += id;
                     break;
@@ -84,16 +84,15 @@ fn do_hard(state: &State) -> Answer {
 }
 
 fn get_n_digits(number: u64, num_digits: u32) -> u64 {
-    let digits = number.ilog10() + 1;
-    let mag = digits - num_digits;
+    let total_digits = number.ilog10() + 1;
+    let mag = total_digits - num_digits;
     number.div_euclid(10_u64.pow(mag))
 }
 
-fn repeat_nibble(nibble: u64, total_len: u32) -> u64 {
-    let digits = nibble.ilog10() + 1;
-    let mag = 10_u64.pow(digits);
-    let count = total_len.div_euclid(digits);
-    let gp = 1 * ((mag.pow(count) - 1) / (mag - 1));
+fn repeat_nibble(nibble: u64, nibble_digits: u32, total_len: u32) -> u64 {
+    let mag = 10_u64.pow(nibble_digits);
+    let count = total_len.div_euclid(nibble_digits);
+    let gp = (mag.pow(count) - 1) / (mag - 1);
     gp * nibble
 }
 
@@ -180,13 +179,13 @@ mod tests {
 
     #[test]
     fn test_repeat_nibble() {
-        let res = repeat_nibble(1, 4);
+        let res = repeat_nibble(1, 1, 4);
         assert_eq!(res, 1111);
-        let res = repeat_nibble(34, 4);
+        let res = repeat_nibble(34, 2, 4);
         assert_eq!(res, 3434);
-        let res = repeat_nibble(345, 9);
+        let res = repeat_nibble(345, 3, 9);
         assert_eq!(res, 345345345);
-        let res = repeat_nibble(3456, 8);
+        let res = repeat_nibble(3456, 4, 8);
         assert_eq!(res, 34563456);
     }
 
