@@ -92,24 +92,18 @@ struct RangeParser {}
 
 impl RangeParser {
     fn parse(&self, reader: Reader) -> Vec<Range> {
-        let mut result = Vec::new();
-        loop {
-            match reader.next() {
-                None => return result,
-                Some(line) => {
-                    let ranges = line
-                        .split(",")
-                        .map(|range| {
-                            let (start, end) = range.split_once("-").unwrap();
-                            let start = start.parse::<u64>().unwrap();
-                            let end = end.parse::<u64>().unwrap();
-                            Range { start, end }
-                        })
-                        .collect::<Vec<Range>>();
-                    result.extend(ranges)
-                }
-            }
-        }
+        reader
+            .into_iter()
+            .next()
+            .unwrap()
+            .split(",")
+            .map(|range| {
+                let (start, end) = range.split_once("-").unwrap();
+                let start = start.parse::<u64>().unwrap();
+                let end = end.parse::<u64>().unwrap();
+                Range { start, end }
+            })
+            .collect::<Vec<Range>>()
     }
 }
 

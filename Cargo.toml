@@ -16,3 +16,4 @@ name = "day-03"
 path = "src/challenges/day-03/main.rs"
 
 [dependencies]
+strum_macros = "0.27.2"

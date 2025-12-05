@@ -91,19 +91,15 @@ struct BatteryBankParser {}
 
 impl BatteryBankParser {
     fn parse(&self, reader: Reader) -> Vec<BatteryBank> {
-        let mut result = Vec::new();
-        loop {
-            match reader.next() {
-                None => return result,
-                Some(line) => {
-                    let batteries = line
-                        .chars()
-                        .map(|char| char.to_digit(10).unwrap() as u8)
-                        .collect::<Vec<u8>>();
-                    result.push(BatteryBank { batteries })
-                }
-            }
-        }
+        reader
+            .map(|line| {
+                let batteries = line
+                    .chars()
+                    .map(|char| char.to_digit(10).unwrap() as u8)
+                    .collect::<Vec<u8>>();
+                BatteryBank { batteries }
+            })
+            .collect()
     }
 }
 

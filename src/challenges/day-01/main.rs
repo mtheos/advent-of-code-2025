@@ -65,34 +65,29 @@ struct DialParser {
 
 impl DialParser {
     fn parse(&self, reader: Reader) -> Vec<Sequence> {
-        let mut result = Vec::new();
-        loop {
-            match reader.next() {
-                None => return result,
-                Some(line) => {
-                    let rollover_value = self.dial_limit + 1;
-                    let value = line[1..].parse::<i32>().unwrap();
-                    let magnitude;
-                    let rollovers;
-                    if value > self.dial_limit {
-                        rollovers = value.div_euclid(rollover_value);
-                        magnitude = value.rem_euclid(rollover_value);
-                    } else {
-                        rollovers = 0;
-                        magnitude = value;
-                    }
-                    let s = Sequence {
-                        rollovers,
-                        magnitude: if line.starts_with('L') {
-                            -magnitude
-                        } else {
-                            magnitude
-                        },
-                    };
-                    result.push(s);
+        reader
+            .map(|line| {
+                let rollover_value = self.dial_limit + 1;
+                let value = line[1..].parse::<i32>().unwrap();
+                let (magnitude, rollovers) = if value > self.dial_limit {
+                    (
+                        value.rem_euclid(rollover_value),
+                        value.div_euclid(rollover_value),
+                    )
+                } else {
+                    (value, 0)
+                };
+                let magnitude = if line.starts_with('L') {
+                    -magnitude
+                } else {
+                    magnitude
+                };
+                Sequence {
+                    rollovers,
+                    magnitude,
                 }
-            }
-        }
+            })
+            .collect()
     }
 }
 

@@ -32,8 +32,12 @@ impl Reader {
         let iter = RefCell::new(Box::new(iter));
         Self { iter }
     }
+}
 
-    pub fn next(&self) -> Option<String> {
+impl Iterator for Reader {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
         self.iter.borrow_mut().next()
     }
 }
