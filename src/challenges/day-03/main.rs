@@ -1,4 +1,4 @@
-use aoc_2025::helpers::Reader;
+use aoc_2025::helpers::{time_it, Reader};
 use std::ops::{Index, Range};
 
 pub const NAME: &str = "Day 03 - Lobby";
@@ -7,9 +7,11 @@ fn main() {
     println!("{}", NAME);
     let reader = Reader::from_file("./src/challenges/day-03/input.txt");
     let input = BatteryBankParser {}.parse(reader);
-    let result = run_easy(&input);
+    let (result, duration) = time_it(|| run_easy(&input));
+    println!("Easy: {duration:?}");
     println!("Joltage: {}", result.max_joltage);
-    let result = run_hard(&input);
+    let (result, duration) = time_it(|| run_hard(&input));
+    println!("Hard: {duration:?}");
     println!("Joltage: {}", result.max_joltage);
 }
 

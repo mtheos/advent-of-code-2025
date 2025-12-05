@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::time::{Duration, Instant};
 
 pub struct Reader {
     iter: RefCell<Box<dyn Iterator<Item = String>>>,
@@ -40,4 +41,14 @@ impl Iterator for Reader {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.borrow_mut().next()
     }
+}
+
+pub fn time_it<F, R>(f: F) -> (R, Duration)
+where
+    F: FnOnce() -> R,
+{
+    let start = Instant::now();
+    let result = f();
+    let duration = start.elapsed();
+    (result, duration)
 }

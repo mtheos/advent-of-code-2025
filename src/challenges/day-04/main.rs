@@ -1,4 +1,4 @@
-use aoc_2025::helpers::Reader;
+use aoc_2025::helpers::{time_it, Reader};
 use std::ops::{Index, IndexMut};
 use strum_macros::Display;
 
@@ -8,9 +8,11 @@ fn main() {
     println!("{}", NAME);
     let reader = Reader::from_file("./src/challenges/day-04/input.txt");
     let input = FactoryFloorParser {}.parse(reader);
-    let result = run_easy(&input);
+    let (result, duration) = time_it(|| run_easy(&input));
+    println!("Easy: {duration:?}");
     println!("Available: {}", result.available_rolls);
-    let result = run_hard(&mut input.clone());
+    let (result, duration) = time_it(|| run_hard(&mut input.clone()));
+    println!("Hard: {duration:?}");
     println!("Available: {}", result.available_rolls);
 }
 

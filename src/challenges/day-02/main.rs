@@ -1,4 +1,4 @@
-use aoc_2025::helpers::Reader;
+use aoc_2025::helpers::{time_it, Reader};
 
 pub const NAME: &str = "Day 02 - Gift Shop";
 
@@ -6,10 +6,12 @@ fn main() {
     println!("{}", NAME);
     let reader = Reader::from_file("./src/challenges/day-02/input.txt");
     let input = RangeParser {}.parse(reader);
-    let result = run_easy(&input);
+    let (result, duration) = time_it(|| run_easy(&input));
+    println!("Easy: {duration:?}");
     println!("Count: {}", result.invalid_count);
     println!("Count: {}", result.invalid_sum);
-    let result = run_hard(&input);
+    let (result, duration) = time_it(|| run_hard(&input));
+    println!("Hard: {duration:?}");
     println!("Count: {}", result.invalid_count);
     println!("Count: {}", result.invalid_sum);
 }

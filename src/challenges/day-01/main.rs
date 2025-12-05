@@ -1,4 +1,4 @@
-use aoc_2025::helpers::Reader;
+use aoc_2025::helpers::{time_it, Reader};
 
 pub const NAME: &str = "Day 01 - Secret Entrance";
 
@@ -6,10 +6,12 @@ fn main() {
     println!("{}", NAME);
     let reader = Reader::from_file("./src/challenges/day-01/input.txt");
     let input = DialParser { dial_limit: 99 }.parse(reader);
-    let result = run_easy(&input, 50, 99);
+    let (result, duration) = time_it(|| run_easy(&input, 50, 99));
+    println!("Easy: {duration:?}");
     println!("Pos  : {}", result.dial_position);
     println!("Count: {}", result.zero_count);
-    let result = run_hard(&input, 50, 99);
+    let (result, duration) = time_it(|| run_hard(&input, 50, 99));
+    println!("Hard: {duration:?}");
     println!("Pos  : {}", result.dial_position);
     println!("Count: {}", result.zero_count);
 }
