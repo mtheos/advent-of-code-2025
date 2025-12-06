@@ -41,20 +41,19 @@ fn do_easy(state: &State) -> Answer {
         .iter()
         .map(|l| {
             l.split_whitespace()
-                .map(|x| x.to_string())
-                .collect::<Vec<String>>()
+                .map(|x| x.parse::<u64>().unwrap())
+                .collect()
         })
-        .collect::<Vec<Vec<String>>>();
+        .collect::<Vec<Vec<u64>>>();
     let sum_of_problems = (0..operands.len())
         .map(|i| {
             let numbers = numbers
                 .iter()
-                .map(|n| n[i].parse().unwrap())
+                .map(|n| n[i])
                 .collect::<Vec<u64>>();
             let operand = operands[i].clone();
-            Problem { numbers, operand }
+            solve_problem(&Problem { numbers, operand })
         })
-        .map(|problem| solve_problem(&problem))
         .sum();
     Answer { sum_of_problems }
 }
