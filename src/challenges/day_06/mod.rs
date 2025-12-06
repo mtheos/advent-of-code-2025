@@ -49,8 +49,8 @@ fn do_easy(state: &State) -> Answer {
         .map(|i| {
             let numbers = numbers
                 .iter()
-                .map(|n| n[i].clone())
-                .collect::<Vec<String>>();
+                .map(|n| n[i].parse().unwrap())
+                .collect::<Vec<u64>>();
             let operand = operands[i].clone();
             Problem { numbers, operand }
         })
@@ -69,19 +69,19 @@ fn do_hard(state: &State) -> Answer {
 }
 
 fn make_stupid_numbers(lines: &Vec<String>, operands: &Vec<Operand>) -> Vec<Problem> {
-    let mut problems = Vec::new();
+    let mut problems = Vec::with_capacity(operands.len());
     let mut i = 0;
     while problems.len() < operands.len() {
-        let mut numbers: Vec<String> = Vec::new();
+        let mut numbers: Vec<u64> = Vec::with_capacity(10);
         let operand = operands[problems.len()].clone();
         loop {
             match make_stupid_number(i, lines) {
-                Some(str) => numbers.push(str),
+                Some(num) => numbers.push(num),
                 None => {
                     problems.push(Problem { numbers, operand });
                     i += 1;
                     break;
-                },
+                }
             }
             i += 1;
         }
@@ -89,33 +89,28 @@ fn make_stupid_numbers(lines: &Vec<String>, operands: &Vec<Operand>) -> Vec<Prob
     problems
 }
 
-fn make_stupid_number(i: usize, lines: &Vec<String>) -> Option<String> {
-    let mut chars: Vec<char> = Vec::new();
+fn make_stupid_number(i: usize, lines: &Vec<String>) -> Option<u64> {
+    let mut result: u64 = 0;
+    let mut found = false;
     for line in lines {
-        let ch = line.chars().nth(i).unwrap_or(' ');
-        chars.push(ch);
+        if let Some(ch) = line.as_bytes().get(i) {
+            if ch.is_ascii_digit() {
+                result = result * 10 + (ch - b'0') as u64;
+                found = true;
+            }
+        };
     }
-    let str = String::from_iter(chars).trim().to_owned();
-    if str.is_empty() {
-        None
+    if found {
+        Some(result)
     } else {
-        Some(str)
+        None
     }
 }
 
 fn solve_problem(problem: &Problem) -> u64 {
     match problem.operand {
-        Operand::Add => problem
-            .numbers
-            .iter()
-            .map(|x| x.parse::<u64>().unwrap())
-            .sum(),
-        Operand::Mul => problem
-            .numbers
-            .iter()
-            .map(|x| x.parse::<u64>().unwrap())
-            .reduce(|acc, e| acc * e)
-            .unwrap(),
+        Operand::Add => problem.numbers.iter().sum(),
+        Operand::Mul => problem.numbers.iter().product(),
     }
 }
 
@@ -131,7 +126,7 @@ enum Operand {
 
 #[derive(Clone)]
 struct Problem {
-    numbers: Vec<String>,
+    numbers: Vec<u64>,
     operand: Operand,
 }
 
