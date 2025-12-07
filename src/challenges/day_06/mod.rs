@@ -188,9 +188,9 @@ mod tests {
         assert_eq!(result.operands[0], Operand::Add);
         assert_eq!(result.operands[1], Operand::Mul);
         assert_eq!(result.lines.len(), 4);
-        assert_eq!(result.lines[0], "15");
-        assert_eq!(result.lines[1], "26");
-        assert_eq!(result.lines[2], "37");
-        assert_eq!(result.lines[3], "48");
+        assert_eq!(result.lines[0], "1 5");
+        assert_eq!(result.lines[1], "2 6");
+        assert_eq!(result.lines[2], "3 7");
+        assert_eq!(result.lines[3], "4 8");
     }
 }
