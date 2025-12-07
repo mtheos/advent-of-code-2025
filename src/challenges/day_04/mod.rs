@@ -72,18 +72,22 @@ fn do_hard(state: &State) -> Answer {
 
 fn is_available((r, c): (usize, usize), factory_floor: &FactoryFloor) -> bool {
     let (r, c) = (r as i32, c as i32);
-    let steps: [i32; 3] = [-1, 0, 1];
+    let steps = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ];
     let mut filled = 0;
-    for x in steps {
-        for y in steps {
-            if x == 0 && y == 0 {
-                continue;
-            }
-            match factory_floor.safe_get(((r + x) as usize, (c + y) as usize)) {
-                Contents::Empty => {}
-                Contents::Roll => filled += 1,
-                Contents::Marked => {}
-            }
+    for (x, y) in steps {
+        match factory_floor.safe_get(((r + x) as usize, (c + y) as usize)) {
+            Contents::Empty => {}
+            Contents::Roll => filled += 1,
+            Contents::Marked => {}
         }
     }
     filled < 4
@@ -176,8 +180,9 @@ mod tests {
 
     #[test]
     fn test_sample_input_easy() {
-        let input =
-            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}_{DAY}/sample.txt").as_str()));
+        let input = FactoryFloorParser {}.parse(Reader::from_file(
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
+        ));
         let state = State { input };
         let result = do_easy(&state);
         assert_eq!(result.available_rolls, 13);
@@ -185,8 +190,9 @@ mod tests {
 
     #[test]
     fn test_sample_input_hard() {
-        let input =
-            FactoryFloorParser {}.parse(Reader::from_file(format!("{PREFIX}_{DAY}/sample.txt").as_str()));
+        let input = FactoryFloorParser {}.parse(Reader::from_file(
+            format!("{PREFIX}_{DAY}/sample.txt").as_str(),
+        ));
         let state = State { input };
         let result = do_hard(&state);
         assert_eq!(result.available_rolls, 43);
