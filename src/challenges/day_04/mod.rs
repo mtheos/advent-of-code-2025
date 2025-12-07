@@ -51,27 +51,22 @@ fn do_easy(state: &State) -> Answer {
 
 fn do_hard(state: &State) -> Answer {
     let input = &mut state.input.clone();
-    let mut available_rolls = 0;
-    let mut to_remove: Vec<(usize, usize)> = Vec::new();
+    let mut available_rolls = 0_u64;
     loop {
+        let mut changed = false;
         for r in 0..input.rows {
             for c in 0..input.cols {
                 if input[(r, c)] == Contents::Roll && is_available((r, c), input) {
-                    to_remove.push((r, c))
+                    available_rolls += 1;
+                    input[(r, c)] = Contents::Marked;
+                    changed = true;
                 }
             }
         }
-        if to_remove.is_empty() {
+        if !changed {
             break;
-        } else {
-            available_rolls += to_remove.len();
-            to_remove.iter().for_each(|&roll| {
-                input[roll] = Contents::Marked;
-            });
-            to_remove.clear();
         }
     }
-    let available_rolls = available_rolls as u64;
     Answer { available_rolls }
 }
 
