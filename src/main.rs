@@ -9,6 +9,11 @@ use crate::challenges::day_04;
 use crate::challenges::day_05;
 use crate::challenges::day_06;
 use crate::challenges::day_07;
+use crate::challenges::day_08;
+use crate::challenges::day_09;
+use crate::challenges::day_10;
+use crate::challenges::day_11;
+use crate::challenges::day_12;
 use crate::challenges::Challenge;
 use crate::helpers::time_it;
 
@@ -21,6 +26,11 @@ fn main() {
     challenges.push(|| Box::new(day_05::State::new()));
     challenges.push(|| Box::new(day_06::State::new()));
     challenges.push(|| Box::new(day_07::State::new()));
+    challenges.push(|| Box::new(day_08::State::new()));
+    challenges.push(|| Box::new(day_09::State::new()));
+    challenges.push(|| Box::new(day_10::State::new()));
+    challenges.push(|| Box::new(day_11::State::new()));
+    challenges.push(|| Box::new(day_12::State::new()));
 
     let arg = env::args().nth(1).or(Some("0".to_string())).unwrap();
     let day = arg.parse::<usize>().unwrap();
