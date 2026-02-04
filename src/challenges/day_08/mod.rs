@@ -1,7 +1,7 @@
 use crate::challenges::Challenge;
 use crate::helpers::{Reader, PREFIX};
 use std::cmp::Reverse;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 
 const NAME: &str = "Playground";
 const DAY: &str = "08";
@@ -43,22 +43,27 @@ fn connect_circuits(
 ) -> Answer {
     let junctions = &state.input.junctions;
     let mut circuits: Vec<Circuit> = Vec::new();
-    let distance_cache: HashMap<(&Junction, &Junction), u64> = precompute_distances(junctions);
+    let items: Vec<JunctionPair> = compute_distances(junctions);
+    let mut it = items.iter();
     while junctions_to_connect > 0 {
-        let (first, second) = find_closest_pair(junctions, &circuits, &distance_cache).unwrap();
-        let first_idx = get_circuit_idx(&first, &circuits);
-        let second_idx = get_circuit_idx(&second, &circuits);
+        let item = it.next().unwrap();
+        let first_idx = get_circuit_idx(&item.first, &circuits);
+        let second_idx = get_circuit_idx(&item.second, &circuits);
         match (first_idx, second_idx) {
             (Some(f), Some(s)) => {
+                if f == s {
+                    junctions_to_connect -= 1;
+                    continue;
+                }
                 let (hi, lo) = if f > s { (f, s) } else { (s, f) };
                 let c2 = circuits.remove(hi);
                 circuits[lo].merge(&c2);
             }
-            (Some(f), None) => circuits[f].add(second),
-            (None, Some(s)) => circuits[s].add(first),
+            (Some(f), None) => circuits[f].add(item.second),
+            (None, Some(s)) => circuits[s].add(item.first),
             (None, None) => {
                 let circuit = Circuit {
-                    junctions: HashSet::from([first, second]),
+                    junctions: HashSet::from([item.first, item.second]),
                 };
                 circuits.push(circuit);
             }
@@ -77,57 +82,33 @@ fn connect_circuits(
     }
 }
 
-fn find_closest_pair<'a>(
-    junctions: &'a Vec<Junction>,
-    circuits: &Vec<Circuit>,
-    distance_cache: &HashMap<(&'a Junction, &'a Junction), u64>,
-) -> Option<(&'a Junction, &'a Junction)> {
-    let mut distance: u64 = u64::MAX;
-    let mut first: Option<&Junction> = None;
-    let mut second: Option<&Junction> = None;
-    for i in 0..junctions.len() - 1 {
-        let first_candidate = &junctions[i];
-        for j in i + 1..junctions.len() {
-            let second_candidate = &junctions[j];
-            let cache_key = &(first_candidate, second_candidate);
-            let circuit =
-                get_circuit_idx(first_candidate, circuits).and_then(|idx| circuits.get(idx));
-            let contained = match circuit {
-                Some(c) => c.contains(second_candidate),
-                None => false,
-            };
-            if !contained {
-                let distance_candidate = distance_cache[cache_key];
-                if distance_candidate < distance {
-                    distance = distance_candidate;
-                    first = Some(first_candidate);
-                    second = Some(second_candidate);
-                }
-            }
-        }
-    }
-
-    match (first, second) {
-        (Some(first), Some(second)) => Some((first, second)),
-        (None, None) => None,
-        (None, Some(_)) | (Some(_), None) => panic!("Did not expect to only match 1 candidate"),
-    }
-}
-
-fn precompute_distances(junctions: &Vec<Junction>) -> HashMap<(&Junction, &Junction), u64> {
-    let mut distance_cache: HashMap<(&Junction, &Junction), u64> = HashMap::new();
+fn compute_distances(junctions: &Vec<Junction>) -> Vec<JunctionPair<'_>> {
+    let mut distances: Vec<JunctionPair> = Vec::new();
     for i in 0..junctions.len() - 1 {
         let first = &junctions[i];
         for j in i + 1..junctions.len() {
             let second = &junctions[j];
-            let cache_key = &(first, second);
             match first.distance_squared(second) {
                 0 => panic!("That's the same circuit!"),
-                d => distance_cache.insert(*cache_key, d),
+                distance_squared => distances.push(JunctionPair {
+                    first,
+                    second,
+                    distance_squared,
+                }),
             };
         }
     }
-    distance_cache
+    let mut sorted = distances;
+    sorted.sort_by_key(|p| p.distance_squared);
+    sorted
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
+struct JunctionPair<'a> {
+    first: &'a Junction,
+    second: &'a Junction,
+    distance_squared: u64,
 }
 
 fn get_circuit_idx(junction: &Junction, circuits: &Vec<Circuit>) -> Option<usize> {
@@ -196,11 +177,8 @@ impl CoordinateParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::challenges::day_08::{
-        connect_circuits, find_closest_pair, Circuit, CoordinateParser, Junction, State, DAY,
-    };
+    use crate::challenges::day_08::{connect_circuits, compute_distances, CoordinateParser, Junction, State, DAY, JunctionPair};
     use crate::helpers::{Reader, PREFIX};
-    use std::collections::{HashMap, HashSet};
 
     #[test]
     fn test_sample_input_easy() {
@@ -223,51 +201,17 @@ mod tests {
     }
 
     #[test]
-    fn test_find_closest_pair() {
+    fn test_compute_distances() {
         let junctions = vec![
             Junction { x: 5, y: 0, z: 0 },
             Junction { x: 25, y: 0, z: 0 },
             Junction { x: 10, y: 0, z: 0 },
         ];
-        let (first, second) =
-            find_closest_pair(&junctions, &Vec::new(), &mut HashMap::new()).unwrap();
-        assert_eq!(*first, Junction { x: 5, y: 0, z: 0 });
-        assert_eq!(*second, Junction { x: 10, y: 0, z: 0 });
-    }
-
-    #[test]
-    fn test_find_closest_pair_with_circuits() {
-        let junctions = vec![
-            Junction { x: 5, y: 0, z: 0 },
-            Junction { x: 10, y: 0, z: 0 },
-            Junction { x: 25, y: 0, z: 0 },
-        ];
-        let circuit = Circuit {
-            junctions: HashSet::from([
-                &Junction { x: 5, y: 0, z: 0 },
-                &Junction { x: 10, y: 0, z: 0 },
-            ]),
-        };
-        let circuits = vec![circuit];
-        let (first, second) =
-            find_closest_pair(&junctions, &circuits, &mut HashMap::new()).unwrap();
-        assert_eq!(*first, Junction { x: 5, y: 0, z: 0 });
-        assert_eq!(*second, Junction { x: 25, y: 0, z: 0 });
-    }
-
-    #[test]
-    fn test_find_closest_pair_all_connected() {
-        let junctions = vec![
-            Junction { x: 5, y: 0, z: 0 },
-            Junction { x: 10, y: 0, z: 0 },
-            Junction { x: 25, y: 0, z: 0 },
-        ];
-        let circuit = Circuit {
-            junctions: HashSet::from_iter(&junctions),
-        };
-        let circuits = vec![circuit];
-        let result = find_closest_pair(&junctions, &circuits, &mut HashMap::new());
-        assert!(result.is_none());
+        let distances = compute_distances(&junctions);
+        assert_eq!(distances.len(), 3);
+        assert_eq!(distances[0], JunctionPair { first: &Junction { x: 5, y: 0, z: 0 }, second: &Junction { x: 10, y: 0, z: 0 }, distance_squared: 25 });
+        assert_eq!(distances[1], JunctionPair { first: &Junction { x: 25, y: 0, z: 0 }, second: &Junction { x: 10, y: 0, z: 0 }, distance_squared: 225 });
+        assert_eq!(distances[2], JunctionPair { first: &Junction { x: 5, y: 0, z: 0 }, second: &Junction { x: 25, y: 0, z: 0 }, distance_squared: 400 });
     }
 
     #[test]
