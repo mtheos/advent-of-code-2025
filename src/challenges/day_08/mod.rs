@@ -1,7 +1,7 @@
 use crate::challenges::Challenge;
 use crate::helpers::{Reader, PREFIX};
 use std::cmp::Reverse;
-use std::collections::{HashSet};
+use std::collections::HashSet;
 
 const NAME: &str = "Playground";
 const DAY: &str = "08";
@@ -32,33 +32,35 @@ impl Challenge for State {
     }
 
     fn run_hard(&mut self) -> String {
-        format!("Part 2: No Result")
+        let max = self.input.junctions.len() * (self.input.junctions.len() - 1) / 2;
+        let result = connect_circuits(&self, max, 1);
+        format!("Last span: {}", result.last_span)
     }
 }
 
 fn connect_circuits(
     state: &State,
-    mut junctions_to_connect: usize,
-    junctions_to_count: usize,
+    mut max_junctions_to_connect: usize,
+    circuits_to_count: usize,
 ) -> Answer {
     let junctions = &state.input.junctions;
     let mut circuits: Vec<Circuit> = Vec::new();
     let items: Vec<JunctionPair> = compute_distances(junctions);
     let mut it = items.iter();
-    while junctions_to_connect > 0 {
+    let mut last_span = 0u64;
+    while max_junctions_to_connect > 0 {
         let item = it.next().unwrap();
         let first_idx = get_circuit_idx(&item.first, &circuits);
         let second_idx = get_circuit_idx(&item.second, &circuits);
+        last_span = item.first.x * item.second.x;
         match (first_idx, second_idx) {
-            (Some(f), Some(s)) => {
-                if f == s {
-                    junctions_to_connect -= 1;
-                    continue;
-                }
+            (Some(f), Some(s)) if f != s => {
                 let (hi, lo) = if f > s { (f, s) } else { (s, f) };
                 let c2 = circuits.remove(hi);
                 circuits[lo].merge(&c2);
             }
+            (Some(f), Some(s)) if f == s => {}
+            (Some(f), Some(s)) => panic!("Match statement was non-exhaustive. Found {f} and {s}"),
             (Some(f), None) => circuits[f].add(item.second),
             (None, Some(s)) => circuits[s].add(item.first),
             (None, None) => {
@@ -68,17 +70,21 @@ fn connect_circuits(
                 circuits.push(circuit);
             }
         }
-        junctions_to_connect -= 1;
+        if circuits.len() == 1 && circuits[0].junctions.len() == state.input.junctions.len() {
+            break;
+        }
+        max_junctions_to_connect -= 1;
     }
     circuits.sort_unstable_by_key(|c| Reverse(c.junctions.len()));
     let largest_circuits_space = circuits
         .iter()
-        .take(junctions_to_count)
+        .take(circuits_to_count)
         .map(|c| c.junctions.len())
         .reduce(|a, b| a * b)
         .unwrap();
     Answer {
         largest_circuits_space,
+        last_span,
     }
 }
 
@@ -103,8 +109,7 @@ fn compute_distances(junctions: &Vec<Junction>) -> Vec<JunctionPair<'_>> {
     sorted
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 struct JunctionPair<'a> {
     first: &'a Junction,
     second: &'a Junction,
@@ -117,6 +122,7 @@ fn get_circuit_idx(junction: &Junction, circuits: &Vec<Circuit>) -> Option<usize
 
 struct Answer {
     largest_circuits_space: usize,
+    last_span: u64,
 }
 
 struct Input {
@@ -177,7 +183,9 @@ impl CoordinateParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::challenges::day_08::{connect_circuits, compute_distances, CoordinateParser, Junction, State, DAY, JunctionPair};
+    use crate::challenges::day_08::{
+        compute_distances, connect_circuits, CoordinateParser, Junction, JunctionPair, State, DAY,
+    };
     use crate::helpers::{Reader, PREFIX};
 
     #[test]
@@ -188,6 +196,7 @@ mod tests {
         let state = State { input };
         let result = connect_circuits(&state, 10, 3);
         assert_eq!(result.largest_circuits_space, 40);
+        assert_eq!(result.last_span, 891504);
     }
 
     #[test]
@@ -196,8 +205,9 @@ mod tests {
             format!("{PREFIX}_{DAY}/sample.txt").as_str(),
         ));
         let state = State { input };
-        let result = connect_circuits(&state, 100, 3);
-        assert_eq!(result.largest_circuits_space, 40);
+        let result = connect_circuits(&state, 1000, 3);
+        assert_eq!(result.largest_circuits_space, state.input.junctions.len());
+        assert_eq!(result.last_span, 25272);
     }
 
     #[test]
@@ -209,9 +219,30 @@ mod tests {
         ];
         let distances = compute_distances(&junctions);
         assert_eq!(distances.len(), 3);
-        assert_eq!(distances[0], JunctionPair { first: &Junction { x: 5, y: 0, z: 0 }, second: &Junction { x: 10, y: 0, z: 0 }, distance_squared: 25 });
-        assert_eq!(distances[1], JunctionPair { first: &Junction { x: 25, y: 0, z: 0 }, second: &Junction { x: 10, y: 0, z: 0 }, distance_squared: 225 });
-        assert_eq!(distances[2], JunctionPair { first: &Junction { x: 5, y: 0, z: 0 }, second: &Junction { x: 25, y: 0, z: 0 }, distance_squared: 400 });
+        assert_eq!(
+            distances[0],
+            JunctionPair {
+                first: &Junction { x: 5, y: 0, z: 0 },
+                second: &Junction { x: 10, y: 0, z: 0 },
+                distance_squared: 25
+            }
+        );
+        assert_eq!(
+            distances[1],
+            JunctionPair {
+                first: &Junction { x: 25, y: 0, z: 0 },
+                second: &Junction { x: 10, y: 0, z: 0 },
+                distance_squared: 225
+            }
+        );
+        assert_eq!(
+            distances[2],
+            JunctionPair {
+                first: &Junction { x: 5, y: 0, z: 0 },
+                second: &Junction { x: 25, y: 0, z: 0 },
+                distance_squared: 400
+            }
+        );
     }
 
     #[test]
